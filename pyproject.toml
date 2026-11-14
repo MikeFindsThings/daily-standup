@@ -1,5 +1,5 @@
 [project]
-name = "linkedin-post-bot"
+name = "daily-standup"
 version = "0.1.0"
 description = "Tech news humor drafts: Prefect Cloud flow + FastMCP server + Claude client"
 requires-python = ">=3.12"

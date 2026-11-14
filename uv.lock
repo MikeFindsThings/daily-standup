@@ -1144,7 +1144,7 @@ wheels = [
 ]
 
 [[package]]
-name = "linkedin-post-bot"
+name = "daily-standup"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

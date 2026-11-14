@@ -14,7 +14,7 @@ from fastmcp.exceptions import ToolError
 HELLO_DEPLOYMENT = os.environ.get("HELLO_DEPLOYMENT", "hello/stage0")
 
 mcp = FastMCP(
-    "Tech News Humor Bot",
+    "Daily Standup",
     instructions=(
         "Controls a Prefect flow that drafts short tech-news LinkedIn posts. "
         "Nothing is ever posted automatically; a human approves every draft."

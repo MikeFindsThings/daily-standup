@@ -18,7 +18,7 @@ Stage 1 adds two more Secret blocks: `anthropic-api-key` and `giphy-api-key`.
 git init -b main
 git add .
 git commit -m "Stage 0: connectivity spike"
-gh repo create linkedin-post-bot --private --source . --push
+gh repo create daily-standup --private --source . --push
 ```
 
 
@@ -40,7 +40,7 @@ Pass: the run reaches `Completed` and the log shows the hello message.
 
 ## 3. FastMCP Gateway (Horizon)
 
-1. Sign in at https://horizon.prefect.io with GitHub and select the `linkedin-post-bot` repo.
+1. Sign in at https://horizon.prefect.io with GitHub and select the `daily-standup` repo.
 2. Entrypoint: `mcp_server/server.py:mcp`
 3. Authentication: **on**.
 4. Add `PREFECT_API_URL` and `PREFECT_API_KEY` in the server's environment settings.

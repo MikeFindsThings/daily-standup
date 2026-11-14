@@ -1,4 +1,4 @@
-name: linkedin-post-bot
+name: daily-standup
 prefect-version: 3.9.3
 
 # Prefect Managed compute has no access to this machine, so every run clones the repo.
@@ -6,7 +6,7 @@ prefect-version: 3.9.3
 # (a fine-grained GitHub PAT, read-only on Contents + Metadata for this one repo).
 pull:
   - prefect.deployments.steps.git_clone:
-      repository: https://github.com/MikeFindsThings/linkedin-post-bot.git
+      repository: https://github.com/MikeFindsThings/daily-standup.git
       branch: main
       access_token: "{{ prefect.blocks.secret.github-token }}"
 
