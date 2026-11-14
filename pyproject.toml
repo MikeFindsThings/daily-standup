@@ -1,0 +1,12 @@
+[project]
+name = "linkedin-post-bot"
+version = "0.1.0"
+description = "Tech news humor drafts: Prefect Cloud flow + FastMCP server + Claude client"
+requires-python = ">=3.12"
+dependencies = [
+    "prefect>=3.9,<4",
+    "fastmcp>=4.2,<5",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=0.24"]

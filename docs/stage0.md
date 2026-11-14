@@ -1,0 +1,69 @@
+# Stage 0: connectivity spike
+
+Goal: prove Claude → FastMCP server → Prefect Cloud → Prefect Managed compute all connect, before building anything real.
+
+You set every secret yourself. Names expected:
+
+| Where | Name | What it is |
+| --- | --- | --- |
+| Prefect Secret block | `github-token` | Fine-grained GitHub PAT, read-only on Contents + Metadata, this repo only |
+| Horizon server environment | `PREFECT_API_URL` | `https://api.prefect.cloud/api/accounts/<account-id>/workspaces/<workspace-id>` |
+| Horizon server environment | `PREFECT_API_KEY` | A Prefect Cloud API key |
+
+Stage 1 adds two more Secret blocks: `anthropic-api-key` and `giphy-api-key`.
+
+## 1. Push the repo to GitHub (private)
+
+```bash
+git init -b main
+git add .
+git commit -m "Stage 0: connectivity spike"
+gh repo create linkedin-post-bot --private --source . --push
+```
+
+
+## 2. Prefect Cloud
+
+```bash
+uv run prefect cloud login
+uv run prefect work-pool create managed-pool --type prefect:managed
+```
+
+Create the `github-token` Secret block in the UI (Blocks → + → Secret), then:
+
+```bash
+uv run prefect deploy --all
+uv run prefect deployment run hello/stage0 --watch
+```
+
+Pass: the run reaches `Completed` and the log shows the hello message.
+
+## 3. FastMCP Gateway (Horizon)
+
+1. Sign in at https://horizon.prefect.io with GitHub and select the `linkedin-post-bot` repo.
+2. Entrypoint: `mcp_server/server.py:mcp`
+3. Authentication: **on**.
+4. Add `PREFECT_API_URL` and `PREFECT_API_KEY` in the server's environment settings.
+5. Deploy Server. Note the URL (documented form: `https://<server-name>.fastmcp.app/mcp`).
+6. In the Inspector, run `ping`, then `trigger_hello_flow`.
+
+Pass: `ping` returns a timestamp, and `trigger_hello_flow` returns a flow run ID that shows up in the Prefect UI.
+
+## 4. Claude custom connector
+
+1. https://claude.ai/customize/connectors → **+ Add** → **Add custom connector**.
+2. Name it, paste the server URL including `/mcp`, Continue.
+3. Review the detected auth settings, Continue.
+4. Authentication: **Sign in now**. OAuth client: try **Use Claude's published identity** first; if sign-in fails, remove the connector and re-add it with **Register automatically**.
+5. Add, then complete the Horizon sign-in.
+6. In a new chat, turn the connector on (+ → Connectors) and ask: "Call ping, then trigger the hello flow."
+
+## 5. Claude Duet
+
+Ask Duet to call `ping` on the connector. If it can't see custom connectors, we use the regular Claude app as the client and move on.
+
+## What to report back
+
+- Did step 2 complete? (If the work pool create fails with a plan limit, tell me the message.)
+- Where did Horizon put environment variables, and did the auth toggle work with Claude's sign-in?
+- Could Duet call `ping`?

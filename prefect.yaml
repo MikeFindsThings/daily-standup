@@ -1,0 +1,19 @@
+name: linkedin-post-bot
+prefect-version: 3.9.3
+
+# Prefect Managed compute has no access to this machine, so every run clones the repo.
+# The repo is private: the clone uses a Prefect Secret block named `github-token`
+# (a fine-grained GitHub PAT, read-only on Contents + Metadata for this one repo).
+pull:
+  - prefect.deployments.steps.git_clone:
+      repository: https://github.com/MikeFindsThings/linkedin-post-bot.git
+      branch: main
+      access_token: "{{ prefect.blocks.secret.github-token }}"
+
+deployments:
+  - name: stage0
+    entrypoint: flows/hello.py:hello
+    parameters:
+      name: world
+    work_pool:
+      name: managed-pool
