@@ -2,13 +2,11 @@ name: daily-standup
 prefect-version: 3.9.3
 
 # Prefect Managed compute has no access to this machine, so every run clones the repo.
-# The repo is private: the clone uses a Prefect Secret block named `github-token`
-# (a fine-grained GitHub PAT, read-only on Contents + Metadata for this one repo).
+# The repo is public, so the clone needs no credentials.
 pull:
   - prefect.deployments.steps.git_clone:
       repository: https://github.com/MikeFindsThings/daily-standup.git
       branch: main
-      access_token: "{{ prefect.blocks.secret.github-token }}"
 
 deployments:
   - name: stage0

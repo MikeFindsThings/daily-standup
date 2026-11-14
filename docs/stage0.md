@@ -6,32 +6,20 @@ You set every secret yourself. Names expected:
 
 | Where | Name | What it is |
 | --- | --- | --- |
-| Prefect Secret block | `github-token` | Fine-grained GitHub PAT, read-only on Contents + Metadata, this repo only |
 | Horizon server environment | `PREFECT_API_URL` | `https://api.prefect.cloud/api/accounts/<account-id>/workspaces/<workspace-id>` |
 | Horizon server environment | `PREFECT_API_KEY` | A Prefect Cloud API key |
 
-Stage 1 adds two more Secret blocks: `anthropic-api-key` and `giphy-api-key`.
+Stage 1 adds two Prefect Secret blocks: `anthropic-api-key` and `giphy-api-key`.
 
-## 1. Push the repo to GitHub (private)
+## 1. GitHub repo (done)
 
-```bash
-git init -b main
-git add .
-git commit -m "Stage 0: connectivity spike"
-gh repo create daily-standup --private --source . --push
-```
-
+The code is at https://github.com/MikeFindsThings/daily-standup (public). Prefect Managed clones it without credentials.
 
 ## 2. Prefect Cloud
 
 ```bash
 uv run prefect cloud login
 uv run prefect work-pool create managed-pool --type prefect:managed
-```
-
-Create the `github-token` Secret block in the UI (Blocks → + → Secret), then:
-
-```bash
 uv run prefect deploy --all
 uv run prefect deployment run hello/stage0 --watch
 ```
@@ -44,8 +32,9 @@ Pass: the run reaches `Completed` and the log shows the hello message.
 2. Entrypoint: `mcp_server/server.py:mcp`
 3. Authentication: **on**.
 4. Add `PREFECT_API_URL` and `PREFECT_API_KEY` in the server's environment settings.
-5. Deploy Server. Note the URL (documented form: `https://<server-name>.fastmcp.app/mcp`).
-6. In the Inspector, run `ping`, then `trigger_hello_flow`.
+5. Look for a preview-deployment setting. The repo is public, so pull requests from strangers should not get preview deployments that can see these variables. Turn previews off or limit them to your own branches if the option exists, and tell me what you find.
+6. Deploy Server. Note the URL (documented form: `https://<server-name>.fastmcp.app/mcp`).
+7. In the Inspector, run `ping`, then `trigger_hello_flow`.
 
 Pass: `ping` returns a timestamp, and `trigger_hello_flow` returns a flow run ID that shows up in the Prefect UI.
 
