@@ -1,6 +1,6 @@
 """Stage 0 spike: FastMCP server with a ping tool and a Prefect trigger tool.
 
-Deployed to FastMCP Gateway (Horizon) with entrypoint `mcp_server/server.py:mcp`.
+Deployed to FastMCP Gateway with entrypoint `mcp_server/server.py:mcp`.
 Expects PREFECT_API_URL and PREFECT_API_KEY in the host's environment settings;
 the Prefect client reads them itself, so this file never touches their values.
 """

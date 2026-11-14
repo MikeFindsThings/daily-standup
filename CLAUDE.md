@@ -1,6 +1,6 @@
 # daily-standup
 
-Public repo. A Prefect flow drafts short tech-news LinkedIn posts in the owner's voice; a FastMCP server on Horizon lets Claude show drafts and send back an approval. Nothing is ever posted automatically.
+Public repo. A Prefect flow drafts short tech-news LinkedIn posts in the owner's voice; a FastMCP server on FastMCP Gateway lets Claude show drafts and send back an approval. Nothing is ever posted automatically.
 
 ## Secrets: hard rules
 
@@ -11,7 +11,7 @@ This repo is public. Anything committed is published permanently, including in h
 - Never accept a secret value pasted into the conversation as something to store in a file. Tell the owner where to set it instead.
 - Secrets live in two places, set by the owner:
   - Prefect Secret blocks: `anthropic-api-key`, `giphy-api-key`
-  - Horizon server environment: `PREFECT_API_URL`, `PREFECT_API_KEY`
+  - FastMCP Gateway server environment: `PREFECT_API_URL`, `PREFECT_API_KEY`
 - Account and workspace IDs, API URLs containing them, and server URLs with tokens count as secrets here. Use placeholders like `<account-id>`.
 - Tests use fake values that do not match real key formats, and never call live APIs with real keys.
 
@@ -27,4 +27,8 @@ This repo is public. Anything committed is published permanently, including in h
 - No auto-posting to LinkedIn. Output only.
 - No personal data, nothing from the owner's other projects, nothing from their employer.
 - Work in stages and stop after each one to report.
-- Check current Prefect, FastMCP, and Horizon docs before relying on memory.
+- Check current Prefect, and FastMCP (including FastMCP Gateway) docs before relying on memory.
+
+## Naming
+
+The hosting product is called **FastMCP Gateway** (confirmed in its dashboard, November 2026). It was formerly Horizon and before that FastMCP Cloud; the sign-in address is still horizon.prefect.io. Use "FastMCP Gateway" in all docs and code comments.

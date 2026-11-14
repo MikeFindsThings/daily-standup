@@ -6,8 +6,8 @@ You set every secret yourself. Names expected:
 
 | Where | Name | What it is |
 | --- | --- | --- |
-| Horizon server environment | `PREFECT_API_URL` | `https://api.prefect.cloud/api/accounts/<account-id>/workspaces/<workspace-id>` |
-| Horizon server environment | `PREFECT_API_KEY` | A Prefect Cloud API key |
+| FastMCP Gateway server environment | `PREFECT_API_URL` | `https://api.prefect.cloud/api/accounts/<account-id>/workspaces/<workspace-id>` |
+| FastMCP Gateway server environment | `PREFECT_API_KEY` | A Prefect Cloud API key |
 
 Stage 1 adds two Prefect Secret blocks: `anthropic-api-key` and `giphy-api-key`.
 
@@ -26,7 +26,7 @@ uv run prefect deployment run hello/stage0 --watch
 
 Pass: the run reaches `Completed` and the log shows the hello message.
 
-## 3. FastMCP Gateway (Horizon)
+## 3. FastMCP Gateway
 
 1. Sign in at https://horizon.prefect.io with GitHub and select the `daily-standup` repo.
 2. Entrypoint: `mcp_server/server.py:mcp`
@@ -44,7 +44,7 @@ Pass: `ping` returns a timestamp, and `trigger_hello_flow` returns a flow run ID
 2. Name it, paste the server URL including `/mcp`, Continue.
 3. Review the detected auth settings, Continue.
 4. Authentication: **Sign in now**. OAuth client: try **Use Claude's published identity** first; if sign-in fails, remove the connector and re-add it with **Register automatically**.
-5. Add, then complete the Horizon sign-in.
+5. Add, then complete the FastMCP Gateway sign-in.
 6. In a new chat, turn the connector on (+ → Connectors) and ask: "Call ping, then trigger the hello flow."
 
 ## 5. Claude Duet
@@ -54,5 +54,5 @@ Ask Duet to call `ping` on the connector. If it can't see custom connectors, we 
 ## What to report back
 
 - Did step 2 complete? (If the work pool create fails with a plan limit, tell me the message.)
-- Where did Horizon put environment variables, and did the auth toggle work with Claude's sign-in?
+- Where did FastMCP Gateway put environment variables, and did the auth toggle work with Claude's sign-in?
 - Could Duet call `ping`?
