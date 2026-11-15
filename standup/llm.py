@@ -50,7 +50,22 @@ class ModelRefused(RuntimeError):
     """The model declined or returned nothing usable. Retrying the same input won't help."""
 
 
+# USD per million tokens (input, output), for the cost line each call prints.
+PRICES = {"claude-haiku-5-5": (0.10, 0.50), "claude-opus-5-5": (4.00, 20.00)}
+
+
+def call_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+    """Approximate USD cost of one call. Unknown models are priced as the caption model."""
+    price_in, price_out = PRICES.get(model, PRICES[CAPTION_MODEL])
+    return (input_tokens * price_in + output_tokens * price_out) / 1_000_000
+
+
 def _parsed(response, what: str):
+    usage = response.usage
+    print(  # shows up in the Prefect task log (log_prints is on)
+        f"{what}: {response.model}, {usage.input_tokens} tokens in, {usage.output_tokens} out, "
+        f"about ${call_cost(response.model, usage.input_tokens, usage.output_tokens):.4f}"
+    )
     if response.stop_reason == "refusal" or response.parsed_output is None:
         raise ModelRefused(f"{what}: model returned no usable output (stop_reason={response.stop_reason})")
     return response.parsed_output

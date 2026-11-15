@@ -2,7 +2,7 @@
 
 A bot that reads the morning's tech news and drafts one-line LinkedIn jokes about it, in my voice. It never posts anything. I pick a draft, and it hands me the final text to post myself.
 
-**Status: in progress.** The connectivity spike is done; the real flow is next.
+**Status: in progress.** The flow runs daily on Prefect Cloud and waits for approval in the Prefect UI. The Claude-facing tools are next.
 
 ## How it fits together
 
