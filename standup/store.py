@@ -69,16 +69,10 @@ def save_final(final: FinalPost, story_title: str, story_url: str) -> None:
     )
 
 
-def load_run_state(flow_run_id: UUID) -> RunState:
-    """Everything this flow run has already published."""
+def state_from_artifacts(artifacts) -> RunState:
+    """Rebuild run state from a flow run's artifacts (any order of picks and draft rounds)."""
     state = RunState()
-    with get_client(sync_client=True) as client:
-        artifacts = client.read_artifacts(
-            artifact_filter=ArtifactFilter(flow_run_id=ArtifactFilterFlowRunId(any_=[flow_run_id])),
-            sort=ArtifactSort.CREATED_DESC,
-            limit=50,
-        )
-    for artifact in artifacts:
+    for artifact in sorted(artifacts, key=lambda a: a.created, reverse=True):
         if artifact.key == KEY_PICKS and not state.picks:
             state.picks = [Pick(**row) for row in _rows(artifact.data)]
         elif artifact.key == KEY_DRAFTS:
@@ -88,12 +82,35 @@ def load_run_state(flow_run_id: UUID) -> RunState:
     return state
 
 
+def final_from_artifacts(artifacts) -> dict | None:
+    """The approved post for a flow run, if it has published one."""
+    for artifact in artifacts:
+        if artifact.key == KEY_FINAL:
+            return {"text": artifact.description or "", "markdown": artifact.data or ""}
+    return None
+
+
+def run_artifact_filter(flow_run_id: UUID) -> ArtifactFilter:
+    return ArtifactFilter(flow_run_id=ArtifactFilterFlowRunId(any_=[flow_run_id]))
+
+
+def final_posts_filter() -> ArtifactFilter:
+    return ArtifactFilter(key=ArtifactFilterKey(any_=[KEY_FINAL]))
+
+
+def load_run_state(flow_run_id: UUID) -> RunState:
+    """Everything this flow run has already published."""
+    with get_client(sync_client=True) as client:
+        artifacts = client.read_artifacts(
+            artifact_filter=run_artifact_filter(flow_run_id), sort=ArtifactSort.CREATED_DESC, limit=50
+        )
+    return state_from_artifacts(artifacts)
+
+
 def recent_posts(n: int = 5) -> list[str]:
     """Text of the last `n` approved posts, newest first."""
     with get_client(sync_client=True) as client:
         artifacts = client.read_artifacts(
-            artifact_filter=ArtifactFilter(key=ArtifactFilterKey(any_=[KEY_FINAL])),
-            sort=ArtifactSort.CREATED_DESC,
-            limit=n,
+            artifact_filter=final_posts_filter(), sort=ArtifactSort.CREATED_DESC, limit=n
         )
     return [a.description for a in artifacts if a.description]

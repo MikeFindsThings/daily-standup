@@ -45,6 +45,12 @@ def test_matches_topic_needs_every_word():
     assert matches_topic(s, None) and matches_topic(s, "  ")
 
 
+def test_matches_topic_uses_whole_words():
+    faa = story("FAA blames copper wire for ground stop", "https://x/2")
+    assert not matches_topic(faa, "ai")
+    assert matches_topic(story("New AI model ships", "https://x/3"), "ai")
+
+
 def test_interleave_round_robins_sources():
     a = [story("a1", "u1"), story("a2", "u2"), story("a3", "u3")]
     b = [story("b1", "u4")]

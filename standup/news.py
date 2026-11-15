@@ -64,11 +64,11 @@ def dedupe(stories: list[Story]) -> list[Story]:
 
 
 def matches_topic(story: Story, topic: str | None) -> bool:
-    """True when every word of `topic` appears in the story's title or summary."""
+    """True when every word of `topic` appears as a whole word in the story's title or summary."""
     if not topic or not topic.strip():
         return True
-    haystack = f"{story.title} {story.summary}".lower()
-    return all(word in haystack for word in topic.lower().split())
+    words = set(normalize_title(f"{story.title} {story.summary}").split())
+    return all(word in words for word in normalize_title(topic).split())
 
 
 def interleave(groups: list[list[Story]]) -> list[Story]:
