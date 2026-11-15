@@ -56,3 +56,19 @@ Ask Duet to call `ping` on the connector. If it can't see custom connectors, we 
 - Did step 2 complete? (If the work pool create fails with a plan limit, tell me the message.)
 - Where did FastMCP Gateway put environment variables, and did the auth toggle work with Claude's sign-in?
 - Could Duet call `ping`?
+
+## Results (2026-11-14)
+
+| Link | Result |
+| --- | --- |
+| Flow on Prefect Managed compute | Works. About 45 seconds of container start-up per run; the flow itself takes under a second. |
+| FastMCP server on FastMCP Gateway | Works. Auto-redeploys on push to `main`. |
+| Server triggers a Prefect run | Works, after a manual redeploy to pick up newly added environment variables. |
+| Claude custom connector | Works in the regular Claude app. Adding the connector required a FastMCP Gateway sign-in, so auth is enforced. |
+| Claude Duet | Not tested yet. |
+
+Notes:
+
+- Creating a Prefect Managed work pool on the Hobby plan worked with no plan-limit error.
+- Changing environment variables in FastMCP Gateway does not take effect until the server is redeployed.
+- No preview-deployment setting was found in the FastMCP Gateway dashboard, so whether pull requests from forks get a deployment is still unconfirmed.
