@@ -282,5 +282,14 @@ def daily_standup(topic: str | None = None):
             return final.text
 
 
+@flow(name="daily-standup-fetch", log_prints=True)
+def fetch_only(topic: str | None = None) -> int:
+    """Only the news fetch. Shows retries and caching without any model calls or approval step."""
+    return len(gather_news(topic))
+
+
 if __name__ == "__main__":
-    daily_standup()
+    if "--fetch-only" in sys.argv:
+        fetch_only()
+    else:
+        daily_standup()

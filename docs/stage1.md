@@ -32,6 +32,7 @@ Created by `scripts/setup_automations.py`:
 uv run prefect deployment run daily-standup/daily              # on Prefect Managed
 uv run prefect deployment run daily-standup/daily -p topic=aws # steer the news search
 uv run python flows/daily_standup.py                           # locally (pauses instead of suspending)
+uv run python flows/daily_standup.py --fetch-only              # only the news fetch: retries and caching
 uv run pytest
 ```
 

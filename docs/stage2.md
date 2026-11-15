@@ -36,4 +36,4 @@ Set in the FastMCP Gateway server's environment settings, never in the repo: `PR
 
 - 77 tests pass, including 34 for the tools with Prefect replaced by a fake.
 - Live run against the real deployment through the MCP protocol: `generate_post` returned in 1 second, drafts were ready at 84 seconds, `regenerate` produced a second round on the next story, an invalid choice was rejected with a clear message, and `approve_post` returned the final post at once. `get_drafts` then showed the run as approved.
-- Not yet checked: the same tools called from Claude through the deployed connector.
+- The same tools were then confirmed working from the regular Claude app through the deployed connector.
