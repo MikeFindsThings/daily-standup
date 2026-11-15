@@ -9,6 +9,24 @@ pull:
       branch: main
 
 deployments:
+  # The real thing: drafts a post every morning and waits for approval.
+  - name: daily
+    entrypoint: flows/daily_standup.py:daily_standup
+    description: Draft today's tech-news one-liner and wait for a human to approve it.
+    schedules:
+      - cron: "30 9 * * *"
+        timezone: America/Los_Angeles
+    work_pool:
+      name: managed-pool
+      job_variables:
+        pip_packages:
+          - "anthropic>=1,<2"
+          - "feedparser>=6"
+        env:
+          # suspend_flow_run requires result persistence to be on.
+          PREFECT_RESULTS_PERSIST_BY_DEFAULT: "true"
+
+  # Stage 0 connectivity check, still used by the MCP server's test tool.
   - name: stage0
     entrypoint: flows/hello.py:hello
     parameters:
