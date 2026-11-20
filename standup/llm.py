@@ -4,9 +4,13 @@ Headlines and summaries come from the open web, so they are passed as data insid
 tagged blocks and the prompts say to treat them as material, not instructions.
 """
 
+import time
+from typing import Any, Callable
+
 import anthropic
 from pydantic import BaseModel, Field
 
+from standup import analytics
 from standup.models import Pick, PostFormat, Story
 
 PICK_MODEL = "claude-haiku-5-5"     # cheap: reads ~60 headlines, returns 3
@@ -54,19 +58,49 @@ class ModelRefused(RuntimeError):
 PRICES = {"claude-haiku-5-5": (0.10, 0.50), "claude-opus-5-5": (4.00, 20.00)}
 
 
-def call_cost(model: str, input_tokens: int, output_tokens: int) -> float:
-    """Approximate USD cost of one call. Unknown models are priced as the caption model."""
+def call_costs(model: str, input_tokens: int, output_tokens: int) -> tuple[float, float]:
+    """Approximate USD (input, output) cost of one call. Unknown models are priced as the caption model."""
     price_in, price_out = PRICES.get(model, PRICES[CAPTION_MODEL])
-    return (input_tokens * price_in + output_tokens * price_out) / 1_000_000
+    return input_tokens * price_in / 1_000_000, output_tokens * price_out / 1_000_000
 
 
-def _parsed(response, what: str):
+def call_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+    """Approximate USD cost of one call."""
+    return sum(call_costs(model, input_tokens, output_tokens))
+
+
+def _timed(what: str, model: str, call: Callable[[], Any]) -> tuple[Any, float]:
+    """Run one API call and time it. A call that raises is recorded as a failed generation."""
+    start = time.monotonic()
+    try:
+        return call(), time.monotonic() - start
+    except Exception as exc:
+        analytics.ai_generation(
+            span_name=what, model=model, latency=time.monotonic() - start, error=type(exc).__name__
+        )
+        raise
+
+
+def _parsed(response, what: str, latency: float = 0.0):
     usage = response.usage
+    input_cost, output_cost = call_costs(response.model, usage.input_tokens, usage.output_tokens)
     print(  # shows up in the Prefect task log (log_prints is on)
         f"{what}: {response.model}, {usage.input_tokens} tokens in, {usage.output_tokens} out, "
-        f"about ${call_cost(response.model, usage.input_tokens, usage.output_tokens):.4f}"
+        f"about ${input_cost + output_cost:.4f}"
     )
-    if response.stop_reason == "refusal" or response.parsed_output is None:
+    refused = response.stop_reason == "refusal" or response.parsed_output is None
+    analytics.ai_generation(  # counts and timings only; the prompt and reply are never sent
+        span_name=what,
+        model=response.model,  # the model that answered, which shows when the fallback ran
+        input_tokens=usage.input_tokens,
+        output_tokens=usage.output_tokens,
+        latency=latency,
+        stop_reason=response.stop_reason,
+        input_cost=input_cost,
+        output_cost=output_cost,
+        error=ModelRefused.__name__ if refused else None,
+    )
+    if refused:
         raise ModelRefused(f"{what}: model returned no usable output (stop_reason={response.stop_reason})")
     return response.parsed_output
 
@@ -77,7 +111,7 @@ def pick_stories(client: anthropic.Anthropic, stories: list[Story], recent_posts
         for i, s in enumerate(stories, 1)
     )
     recent = "\n".join(f"- {p}" for p in recent_posts) or "(none yet)"
-    response = client.messages.parse(
+    response, latency = _timed("pick_stories", PICK_MODEL, lambda: client.messages.parse(
         model=PICK_MODEL,
         max_tokens=4000,
         system=(
@@ -97,9 +131,9 @@ def pick_stories(client: anthropic.Anthropic, stories: list[Story], recent_posts
             ),
         }],
         output_format=_PickList,
-    )
+    ))
     picks: list[Pick] = []
-    for item in _parsed(response, "pick_stories").picks:
+    for item in _parsed(response, "pick_stories", latency).picks:
         if 1 <= item.index <= len(stories) and all(p.url != stories[item.index - 1].url for p in picks):
             s = stories[item.index - 1]
             picks.append(Pick(rank=len(picks) + 1, title=s.title, url=s.url, source=s.source,
@@ -118,7 +152,7 @@ def write_captions(
             "\n\n<rejected_drafts>\nThese earlier drafts were rejected. Do not repeat them or their problems:\n"
             + "\n".join(f"- {f}" for f in feedback) + "\n</rejected_drafts>"
         )
-    response = client.beta.messages.parse(
+    response, latency = _timed("write_captions", CAPTION_MODEL, lambda: client.beta.messages.parse(
         model=CAPTION_MODEL,
         max_tokens=8000,
         betas=[FALLBACK_BETA],
@@ -144,13 +178,13 @@ def write_captions(
             ),
         }],
         output_format=_CaptionSet,
-    )
-    return _parsed(response, "write_captions").options[:3]
+    ))
+    return _parsed(response, "write_captions", latency).options[:3]
 
 
 def judge_captions(client: anthropic.Anthropic, pick: Pick, captions: list[str], voice: str) -> list[Verdict]:
     listing = "\n".join(f"{i}. {text}" for i, text in enumerate(captions, 1))
-    response = client.messages.parse(
+    response, latency = _timed("judge_captions", JUDGE_MODEL, lambda: client.messages.parse(
         model=JUDGE_MODEL,
         max_tokens=4000,
         system=(
@@ -171,5 +205,5 @@ def judge_captions(client: anthropic.Anthropic, pick: Pick, captions: list[str],
             ),
         }],
         output_format=_Verdicts,
-    )
-    return _parsed(response, "judge_captions").verdicts
+    ))
+    return _parsed(response, "judge_captions", latency).verdicts

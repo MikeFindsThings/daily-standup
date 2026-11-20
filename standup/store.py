@@ -8,6 +8,7 @@ artifacts are what the MCP server reads to show drafts.
 
 import json
 from dataclasses import dataclass, field
+from datetime import datetime
 from uuid import UUID
 
 from prefect import get_client
@@ -27,6 +28,8 @@ KEY_FINAL = "standup-final"
 class RunState:
     picks: list[Pick] = field(default_factory=list)
     rounds: dict[int, list[Draft]] = field(default_factory=dict)
+    # When each round's drafts were published, for how long a draft waited for a reply.
+    round_created: dict[int, datetime] = field(default_factory=dict)
 
 
 def _rows(data) -> list[dict]:
@@ -77,8 +80,10 @@ def state_from_artifacts(artifacts) -> RunState:
             state.picks = [Pick(**row) for row in _rows(artifact.data)]
         elif artifact.key == KEY_DRAFTS:
             drafts = [row_to_draft(row) for row in _rows(artifact.data)]
-            if drafts:
-                state.rounds.setdefault(drafts[0].round, drafts)
+            if drafts and drafts[0].round not in state.rounds:
+                state.rounds[drafts[0].round] = drafts
+                if artifact.created:
+                    state.round_created[drafts[0].round] = artifact.created
     return state
 
 
@@ -105,6 +110,24 @@ def load_run_state(flow_run_id: UUID) -> RunState:
             artifact_filter=run_artifact_filter(flow_run_id), sort=ArtifactSort.CREATED_DESC, limit=50
         )
     return state_from_artifacts(artifacts)
+
+
+APPROVAL_INPUT_PREFIX = "suspended-approval-"
+
+
+def answered_replies(flow_run_id: UUID) -> int:
+    """How many approval replies a suspended run has already received.
+
+    Prefect stores each reply as run input under `suspended-approval-<n>-response`
+    (see keyset_from_paused_state in prefect/input/run_input.py).
+    """
+    from standup.analytics import count_answered
+
+    with get_client(sync_client=True) as client:
+        inputs = client.filter_flow_run_input(
+            flow_run_id, key_prefix=APPROVAL_INPUT_PREFIX, limit=50, exclude_keys=set()
+        )
+    return count_answered([i.key for i in inputs])
 
 
 def recent_posts(n: int = 5) -> list[str]:

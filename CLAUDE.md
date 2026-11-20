@@ -10,7 +10,7 @@ This repo is public. Anything committed is published permanently, including in h
 - Never write a real secret value anywhere in the repo: not in code, config, docs, tests, comments, or commit messages. Refer to secrets by name only.
 - Never accept a secret value pasted into the conversation as something to store in a file. Tell the owner where to set it instead.
 - Secrets live in two places, set by the owner:
-  - Prefect Secret blocks: `anthropic-api-key`, `giphy-api-key`
+  - Prefect Secret blocks: `anthropic-api-key`, `giphy-api-key`, `posthog-project-token`
   - FastMCP Gateway server environment: `PREFECT_API_URL`, `PREFECT_API_KEY`
 - Account and workspace IDs, API URLs containing them, and server URLs with tokens count as secrets here. Use placeholders like `<account-id>`.
 - Tests use fake values that do not match real key formats, and never call live APIs with real keys.

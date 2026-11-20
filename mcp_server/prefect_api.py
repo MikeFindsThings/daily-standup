@@ -34,7 +34,9 @@ async def start_run(topic: str | None) -> FlowRun:
     async with get_client() as client:
         deployment = await client.read_deployment_by_name(DEPLOYMENT)
         return await client.create_flow_run_from_deployment(
-            deployment.id, parameters={"topic": topic} if topic else {}
+            deployment.id,
+            parameters={"topic": topic} if topic else {},
+            tags=["mcp"],  # read by the flow as analytics `trigger`
         )
 
 

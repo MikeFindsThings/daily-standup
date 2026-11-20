@@ -22,6 +22,7 @@ deployments:
         pip_packages:
           - "anthropic>=1,<2"
           - "feedparser>=6"
+          - "posthog>=8,<9"
         env:
           # suspend_flow_run requires result persistence to be on.
           PREFECT_RESULTS_PERSIST_BY_DEFAULT: "true"

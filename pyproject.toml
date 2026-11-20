@@ -8,6 +8,7 @@ dependencies = [
     "fastmcp>=4.2,<5",
     "anthropic>=1,<2",
     "feedparser>=6",
+    "posthog>=8,<9",
 ]
 
 [dependency-groups]
